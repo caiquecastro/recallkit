@@ -5,18 +5,36 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## Database
+
+RecallKit uses Postgres with pgvector and Drizzle ORM.
+
+Create an environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Set `DATABASE_URL` to a Postgres database with pgvector available, then run:
+
+```bash
+pnpm db:migrate
+```
+
+Useful commands:
+
+```bash
+pnpm db:generate
+pnpm db:push
+pnpm db:studio
+```
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
