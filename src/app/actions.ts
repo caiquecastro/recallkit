@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getDb } from "@/db/client";
 import {
+  chunks,
   collectionItems,
   collections,
   documents,
@@ -15,12 +16,20 @@ import {
 import { getDevUserId } from "@/lib/dev-user";
 
 type DatabaseExecutor = Pick<ReturnType<typeof getDb>, "insert" | "select">;
+type SourceType = "note" | "url";
 
-export async function createNote(formData: FormData) {
-  const title = getRequiredString(formData, "title");
-  const content = getRequiredString(formData, "content");
+export async function createItem(formData: FormData) {
+  const sourceType = parseSourceType(getRequiredString(formData, "sourceType"));
+  const titleInput = getOptionalString(formData, "title");
+  const noteContent = getOptionalString(formData, "content");
+  const urlInput = getOptionalString(formData, "url");
   const collectionName = getOptionalString(formData, "collection");
   const tagNames = parseTags(getOptionalString(formData, "tags"));
+  const source = await resolveSourceContent(sourceType, {
+    content: noteContent,
+    title: titleInput,
+    url: urlInput,
+  });
 
   const db = getDb();
 
@@ -31,18 +40,39 @@ export async function createNote(formData: FormData) {
       .insert(items)
       .values({
         userId,
-        title,
-        sourceType: "note",
-        contentText: content,
+        title: source.title,
+        sourceType,
+        url: source.url,
+        contentText: source.content,
+        summary: source.summary,
         status: "ready",
+        metadata: source.metadata,
       })
       .returning({ id: items.id });
 
-    await tx.insert(documents).values({
-      itemId: item.id,
-      rawText: content,
-      cleanedText: content.trim(),
-    });
+    const [document] = await tx
+      .insert(documents)
+      .values({
+        itemId: item.id,
+        rawText: source.content,
+        cleanedText: source.content.trim(),
+        metadata: source.metadata,
+      })
+      .returning({ id: documents.id });
+
+    const chunkValues = chunkText(source.content).map(
+      (content, chunkIndex) => ({
+        documentId: document.id,
+        itemId: item.id,
+        content,
+        chunkIndex,
+        metadata: { sourceType },
+      }),
+    );
+
+    if (chunkValues.length > 0) {
+      await tx.insert(chunks).values(chunkValues);
+    }
 
     for (const tagName of tagNames) {
       const tagId = await resolveTagId(tx, userId, tagName);
@@ -72,9 +102,153 @@ export async function createNote(formData: FormData) {
   redirect(`/library/${itemId}`);
 }
 
+async function resolveSourceContent(
+  sourceType: SourceType,
+  input: { content: string; title: string; url: string },
+) {
+  if (sourceType === "note") {
+    const content = requireValue(input.content, "content");
+
+    return {
+      content,
+      metadata: {},
+      summary: null,
+      title: requireValue(input.title, "title"),
+      url: null,
+    };
+  }
+
+  const url = normalizeUrl(input.url);
+  const extracted = await fetchUrlContent(url);
+  const title = input.title || extracted.title || new URL(url).hostname;
+
+  return {
+    content: extracted.content,
+    metadata: {
+      contentType: extracted.contentType,
+      description: extracted.description,
+      fetchedAt: new Date().toISOString(),
+    },
+    summary: extracted.description,
+    title,
+    url,
+  };
+}
+
+function parseSourceType(value: string): SourceType {
+  if (value === "note" || value === "url") {
+    return value;
+  }
+
+  throw new Error("sourceType must be note or url.");
+}
+
+async function fetchUrlContent(url: string) {
+  const response = await fetch(url, {
+    headers: {
+      accept: "text/html,text/plain;q=0.9",
+      "user-agent": "RecallKit/0.1",
+    },
+    signal: AbortSignal.timeout(12_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch URL. Received ${response.status}.`);
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (
+    !contentType.includes("text/html") &&
+    !contentType.includes("text/plain")
+  ) {
+    throw new Error("URL must return HTML or plain text content.");
+  }
+
+  const body = await response.text();
+  const title = extractTitle(body);
+  const description = extractMetaDescription(body);
+  const content = contentType.includes("text/html")
+    ? extractReadableText(body)
+    : body.trim();
+
+  if (!content) {
+    throw new Error("No readable text was found at this URL.");
+  }
+
+  return {
+    content,
+    contentType,
+    description,
+    title,
+  };
+}
+
+function normalizeUrl(value: string) {
+  const url = new URL(requireValue(value, "url"));
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("URL must start with http:// or https://.");
+  }
+
+  return url.toString();
+}
+
+function extractTitle(html: string) {
+  const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  return match ? decodeHtml(match[1]).trim() : "";
+}
+
+function extractMetaDescription(html: string) {
+  const match = html.match(
+    /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+  );
+
+  return match ? decodeHtml(match[1]).trim() : null;
+}
+
+function extractReadableText(html: string) {
+  return decodeHtml(
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+}
+
+function decodeHtml(value: string) {
+  return value
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function chunkText(content: string) {
+  const words = content.trim().split(/\s+/).filter(Boolean);
+  const chunks: string[] = [];
+  const size = 220;
+  const overlap = 40;
+
+  for (let index = 0; index < words.length; index += size - overlap) {
+    chunks.push(words.slice(index, index + size).join(" "));
+  }
+
+  return chunks;
+}
+
 function getRequiredString(formData: FormData, field: string) {
   const value = getOptionalString(formData, field);
 
+  return requireValue(value, field);
+}
+
+function requireValue(value: string, field: string) {
   if (!value) {
     throw new Error(`${field} is required.`);
   }

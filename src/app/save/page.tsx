@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { createNote } from "@/app/actions";
+import { createItem } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +11,31 @@ export default function SavePage() {
         <h1 className="font-semibold text-3xl tracking-tight">Save</h1>
       </div>
 
-      <form action={createNote} className="panel grid gap-5">
+      <form action={createItem} className="panel grid gap-5">
+        <label className="grid gap-2">
+          <span className="field-label">Type</span>
+          <select className="field" defaultValue="note" name="sourceType">
+            <option value="note">Note</option>
+            <option value="url">URL</option>
+          </select>
+        </label>
+
         <label className="grid gap-2">
           <span className="field-label">Title</span>
           <input
             className="field"
             name="title"
             placeholder="Babolat Pure Aero alternatives"
-            required
+          />
+        </label>
+
+        <label className="grid gap-2">
+          <span className="field-label">URL</span>
+          <input
+            className="field"
+            name="url"
+            placeholder="https://example.com/article"
+            type="url"
           />
         </label>
 
@@ -28,7 +45,6 @@ export default function SavePage() {
             className="field min-h-64 resize-y"
             name="content"
             placeholder="Paste or write the note here."
-            required
           />
         </label>
 
@@ -57,7 +73,7 @@ export default function SavePage() {
             Cancel
           </Link>
           <button className="primary-button" type="submit">
-            Save note
+            Save item
           </button>
         </div>
       </form>

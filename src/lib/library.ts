@@ -19,6 +19,7 @@ export type LibraryItem = {
   sourceType: "url" | "pdf" | "note" | "video" | "document";
   status: "draft" | "processing" | "ready" | "failed";
   summary: string | null;
+  url: string | null;
   createdAt: Date;
   tags: string[];
   collections: string[];
@@ -48,6 +49,7 @@ export async function getLibraryItems(): Promise<LibraryState> {
       sourceType: items.sourceType,
       status: items.status,
       summary: items.summary,
+      url: items.url,
       createdAt: items.createdAt,
       tagName: tags.name,
       collectionName: collections.name,
@@ -77,6 +79,7 @@ export async function getItemDetail(itemId: string): Promise<ItemDetailState> {
       sourceType: items.sourceType,
       status: items.status,
       summary: items.summary,
+      url: items.url,
       contentText: items.contentText,
       createdAt: items.createdAt,
       rawText: documents.rawText,
@@ -113,6 +116,7 @@ export async function getItemDetail(itemId: string): Promise<ItemDetailState> {
       sourceType: item.sourceType,
       status: item.status,
       summary: item.summary,
+      url: item.url,
       contentText: item.contentText,
       createdAt: item.createdAt,
       tags: tagRows.map((tag) => tag.name),
@@ -132,6 +136,7 @@ function groupLibraryRows(
     sourceType: LibraryItem["sourceType"];
     status: LibraryItem["status"];
     summary: string | null;
+    url: string | null;
     createdAt: Date;
     tagName: string | null;
     collectionName: string | null;
@@ -148,6 +153,7 @@ function groupLibraryRows(
         sourceType: row.sourceType,
         status: row.status,
         summary: row.summary,
+        url: row.url,
         createdAt: row.createdAt,
         tags: [],
         collections: [],

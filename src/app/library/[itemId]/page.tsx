@@ -39,6 +39,16 @@ export default async function ItemDetailPage({
           date={item.createdAt}
           tags={item.tags}
         />
+        {item.url ? (
+          <a
+            className="break-all text-sm text-teal-700 hover:text-teal-900"
+            href={item.url}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {item.url}
+          </a>
+        ) : null}
       </header>
 
       {item.summary ? (
