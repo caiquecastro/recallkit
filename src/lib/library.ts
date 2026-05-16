@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 
-import { getDb, hasDatabaseUrl } from "@/db/client";
+import { getDb } from "@/db/client";
 import {
   collectionItems,
   collections,
@@ -11,9 +11,7 @@ import {
 } from "@/db/schema";
 import { getDevUserId } from "@/lib/dev-user";
 
-export type LibraryState =
-  | { status: "missing-database-url" }
-  | { status: "ready"; items: LibraryItem[] };
+export type LibraryState = { status: "ready"; items: LibraryItem[] };
 
 export type LibraryItem = {
   id: string;
@@ -27,7 +25,6 @@ export type LibraryItem = {
 };
 
 export type ItemDetailState =
-  | { status: "missing-database-url" }
   | { status: "not-found" }
   | {
       status: "ready";
@@ -41,10 +38,6 @@ export type ItemDetailState =
     };
 
 export async function getLibraryItems(): Promise<LibraryState> {
-  if (!hasDatabaseUrl()) {
-    return { status: "missing-database-url" };
-  }
-
   const db = getDb();
   const userId = await getDevUserId(db);
 
@@ -74,10 +67,6 @@ export async function getLibraryItems(): Promise<LibraryState> {
 }
 
 export async function getItemDetail(itemId: string): Promise<ItemDetailState> {
-  if (!hasDatabaseUrl()) {
-    return { status: "missing-database-url" };
-  }
-
   const db = getDb();
   const userId = await getDevUserId(db);
 

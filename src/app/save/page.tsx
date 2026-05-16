@@ -1,15 +1,10 @@
 import Link from "next/link";
 
 import { createNote } from "@/app/actions";
-import { hasDatabaseUrl } from "@/db/client";
 
 export const dynamic = "force-dynamic";
 
 export default function SavePage() {
-  if (!hasDatabaseUrl()) {
-    return <DatabaseSetup />;
-  }
-
   return (
     <div className="grid max-w-3xl gap-6">
       <div className="grid gap-2">
@@ -66,20 +61,6 @@ export default function SavePage() {
           </button>
         </div>
       </form>
-    </div>
-  );
-}
-
-function DatabaseSetup() {
-  return (
-    <div className="panel max-w-2xl">
-      <h1 className="font-semibold text-2xl tracking-tight">
-        Database required
-      </h1>
-      <p className="mt-3 text-sm text-zinc-600">
-        Set `DATABASE_URL` in `.env.local`, run `pnpm db:migrate`, then restart
-        the dev server.
-      </p>
     </div>
   );
 }

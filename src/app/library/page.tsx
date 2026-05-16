@@ -7,10 +7,6 @@ export const dynamic = "force-dynamic";
 export default async function LibraryPage() {
   const state = await getLibraryItems();
 
-  if (state.status === "missing-database-url") {
-    return <DatabaseSetup />;
-  }
-
   return (
     <div className="grid gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -80,18 +76,4 @@ function MetaLine({
   ];
 
   return <p className="mt-3 text-sm text-zinc-500">{parts.join(" · ")}</p>;
-}
-
-function DatabaseSetup() {
-  return (
-    <div className="panel max-w-2xl">
-      <h1 className="font-semibold text-2xl tracking-tight">
-        Database required
-      </h1>
-      <p className="mt-3 text-sm text-zinc-600">
-        Set `DATABASE_URL` in `.env.local`, run `pnpm db:migrate`, then restart
-        the dev server.
-      </p>
-    </div>
-  );
 }
