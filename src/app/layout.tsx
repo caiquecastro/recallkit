@@ -22,8 +22,8 @@ export default function RootLayout({
                 RecallKit
               </Link>
               <nav className="flex items-center gap-1 text-sm">
-                <Link className="nav-link" href="/save">
-                  Save
+                <Link className="nav-link" href="/new">
+                  New
                 </Link>
                 <Link className="nav-link" href="/library">
                   Library

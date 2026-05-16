@@ -11,16 +11,16 @@ export default async function LibraryPage() {
     <div className="grid gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-semibold text-3xl tracking-tight">Library</h1>
-        <Link className="primary-button" href="/save">
-          Save note
+        <Link className="primary-button" href="/new">
+          New item
         </Link>
       </div>
 
       {state.items.length === 0 ? (
         <div className="panel grid gap-3">
           <h2 className="font-medium text-xl">No saved items</h2>
-          <Link className="secondary-button w-fit" href="/save">
-            Add the first note
+          <Link className="secondary-button w-fit" href="/new">
+            Add the first item
           </Link>
         </div>
       ) : (

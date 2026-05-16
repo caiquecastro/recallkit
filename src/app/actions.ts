@@ -18,19 +18,45 @@ import { getDevUserId } from "@/lib/dev-user";
 type DatabaseExecutor = Pick<ReturnType<typeof getDb>, "insert" | "select">;
 type SourceType = "note" | "url";
 
-export async function createItem(formData: FormData) {
-  const sourceType = parseSourceType(getRequiredString(formData, "sourceType"));
-  const titleInput = getOptionalString(formData, "title");
-  const noteContent = getOptionalString(formData, "content");
-  const urlInput = getOptionalString(formData, "url");
-  const collectionName = getOptionalString(formData, "collection");
-  const tagNames = parseTags(getOptionalString(formData, "tags"));
-  const source = await resolveSourceContent(sourceType, {
-    content: noteContent,
-    title: titleInput,
-    url: urlInput,
+export async function createNote(formData: FormData) {
+  const source = await resolveNoteContent({
+    content: getOptionalString(formData, "content"),
+    title: getOptionalString(formData, "title"),
   });
 
+  await createLibraryItem({
+    collectionName: getOptionalString(formData, "collection"),
+    source,
+    sourceType: "note",
+    tagNames: parseTags(getOptionalString(formData, "tags")),
+  });
+}
+
+export async function createUrlItem(formData: FormData) {
+  const source = await resolveUrlContent({
+    title: getOptionalString(formData, "title"),
+    url: getOptionalString(formData, "url"),
+  });
+
+  await createLibraryItem({
+    collectionName: getOptionalString(formData, "collection"),
+    source,
+    sourceType: "url",
+    tagNames: parseTags(getOptionalString(formData, "tags")),
+  });
+}
+
+async function createLibraryItem({
+  collectionName,
+  source,
+  sourceType,
+  tagNames,
+}: {
+  collectionName: string;
+  source: ResolvedSource;
+  sourceType: SourceType;
+  tagNames: string[];
+}) {
   const db = getDb();
 
   const itemId = await db.transaction(async (tx) => {
@@ -102,22 +128,27 @@ export async function createItem(formData: FormData) {
   redirect(`/library/${itemId}`);
 }
 
-async function resolveSourceContent(
-  sourceType: SourceType,
-  input: { content: string; title: string; url: string },
-) {
-  if (sourceType === "note") {
-    const content = requireValue(input.content, "content");
+type ResolvedSource = {
+  content: string;
+  metadata: Record<string, unknown>;
+  summary: string | null;
+  title: string;
+  url: string | null;
+};
 
-    return {
-      content,
-      metadata: {},
-      summary: null,
-      title: requireValue(input.title, "title"),
-      url: null,
-    };
-  }
+async function resolveNoteContent(input: { content: string; title: string }) {
+  const content = requireValue(input.content, "content");
 
+  return {
+    content,
+    metadata: {},
+    summary: null,
+    title: requireValue(input.title, "title"),
+    url: null,
+  } satisfies ResolvedSource;
+}
+
+async function resolveUrlContent(input: { title: string; url: string }) {
   const url = normalizeUrl(input.url);
   const extracted = await fetchUrlContent(url);
   const title = input.title || extracted.title || new URL(url).hostname;
@@ -132,15 +163,7 @@ async function resolveSourceContent(
     summary: extracted.description,
     title,
     url,
-  };
-}
-
-function parseSourceType(value: string): SourceType {
-  if (value === "note" || value === "url") {
-    return value;
-  }
-
-  throw new Error("sourceType must be note or url.");
+  } satisfies ResolvedSource;
 }
 
 async function fetchUrlContent(url: string) {
@@ -240,12 +263,6 @@ function chunkText(content: string) {
   }
 
   return chunks;
-}
-
-function getRequiredString(formData: FormData, field: string) {
-  const value = getOptionalString(formData, field);
-
-  return requireValue(value, field);
 }
 
 function requireValue(value: string, field: string) {

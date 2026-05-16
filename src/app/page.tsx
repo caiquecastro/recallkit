@@ -6,14 +6,14 @@ export default function Home() {
       <section className="grid gap-3">
         <p className="text-sm font-medium text-teal-700">Personal library</p>
         <h1 className="max-w-3xl font-semibold text-4xl tracking-tight">
-          Save notes now. Retrieval comes next.
+          Save notes and URLs now. Retrieval comes next.
         </h1>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <Link className="action-card" href="/save">
+        <Link className="action-card" href="/new">
           <span className="text-sm text-zinc-500">Capture</span>
-          <strong>Save a note</strong>
+          <strong>New item</strong>
         </Link>
         <Link className="action-card" href="/library">
           <span className="text-sm text-zinc-500">Browse</span>
