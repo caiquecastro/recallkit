@@ -5,10 +5,23 @@ import * as schema from "@/db/schema";
 
 const databaseUrl = process.env.DATABASE_URL;
 
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required to connect to the database.");
+type Database = ReturnType<typeof drizzle<typeof schema>>;
+
+let db: Database | undefined;
+
+export function hasDatabaseUrl() {
+  return Boolean(databaseUrl);
 }
 
-const client = postgres(databaseUrl, { prepare: false });
+export function getDb() {
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required to connect to the database.");
+  }
 
-export const db = drizzle(client, { schema });
+  if (!db) {
+    const client = postgres(databaseUrl, { prepare: false });
+    db = drizzle(client, { schema });
+  }
+
+  return db;
+}

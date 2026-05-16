@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fafaf9;
   --foreground: #171717;
 }
 
@@ -12,15 +12,117 @@
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.nav-link {
+  border-radius: 6px;
+  color: #3f3f46;
+  padding: 0.5rem 0.75rem;
+}
+
+.nav-link:hover {
+  background: #f4f4f5;
+  color: #18181b;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.action-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.5rem;
+  min-height: 9rem;
+  padding: 1.25rem;
+}
+
+.action-card:hover,
+.list-row:hover {
+  border-color: #14b8a6;
+}
+
+.field-label {
+  color: #3f3f46;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.field {
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  color: #18181b;
+  outline: none;
+  padding: 0.75rem 0.875rem;
+  width: 100%;
+}
+
+.field:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16);
+}
+
+.primary-button,
+.secondary-button {
+  align-items: center;
+  border-radius: 6px;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-height: 2.5rem;
+  padding: 0.625rem 0.875rem;
+}
+
+.primary-button {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  background: #115e59;
+}
+
+.secondary-button {
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  color: #3f3f46;
+}
+
+.secondary-button:hover {
+  background: #f4f4f5;
+}
+
+.list-row {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  display: block;
+  padding: 1rem;
+}
+
+.badge {
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 999px;
+  color: #52525b;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding: 0.125rem 0.5rem;
+}
+
+.section-title {
+  color: #3f3f46;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
