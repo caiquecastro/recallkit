@@ -16,16 +16,29 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 RecallKit uses Postgres with pgvector and Drizzle ORM.
 
+Start the local database:
+
+```bash
+pnpm db:up
+```
+
 Create an environment file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Set `DATABASE_URL` to a Postgres database with pgvector available, then run:
+The default local connection string is already set in `.env.example`. Apply
+the database migrations:
 
 ```bash
 pnpm db:migrate
+```
+
+Then run the app:
+
+```bash
+pnpm dev
 ```
 
 Useful commands:
@@ -34,6 +47,8 @@ Useful commands:
 pnpm db:generate
 pnpm db:push
 pnpm db:studio
+pnpm db:down
+pnpm db:reset
 ```
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
