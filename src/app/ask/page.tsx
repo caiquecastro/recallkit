@@ -72,7 +72,10 @@ export default async function AskPage({ searchParams }: AskPageProps) {
           <div className="grid gap-3">
             <h2 className="section-title">Sources</h2>
             {state.citations.map((citation, index) => (
-              <article className="list-row" key={citation.itemId}>
+              <article
+                className="list-row"
+                key={`${citation.itemId}-${citation.chunkIndex}`}
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="badge">[{index + 1}]</span>
                   <span className="badge">{citation.sourceType}</span>
