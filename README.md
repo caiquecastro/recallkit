@@ -51,6 +51,28 @@ pnpm db:down
 pnpm db:reset
 ```
 
+## AI Providers
+
+RecallKit reads AI settings from server-side environment variables. Use OpenAI
+by default:
+
+```bash
+AI_CHAT_PROVIDER="openai"
+AI_EMBEDDING_PROVIDER="openai"
+OPENAI_API_KEY="..."
+```
+
+To route chat and embeddings through OpenRouter instead:
+
+```bash
+AI_CHAT_PROVIDER="openrouter"
+AI_EMBEDDING_PROVIDER="openrouter"
+OPENROUTER_API_KEY="..."
+```
+
+The model IDs are configurable in `.env.local`; see `.env.example` for the
+default OpenAI and OpenRouter model names.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
