@@ -1,7 +1,8 @@
-import { desc, eq } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 
 import { getDb } from "@/db/client";
 import { chunks, items } from "@/db/schema";
+import { createEmbeddings } from "@/lib/ai";
 import { getDevUserId } from "@/lib/dev-user";
 
 export type AskState =
@@ -18,46 +19,11 @@ export type AskCitation = {
   chunkIndex: number;
   content: string;
   itemId: string;
+  similarity: number;
   sourceType: string;
   title: string;
   url: string | null;
 };
-
-const STOP_WORDS = new Set([
-  "a",
-  "about",
-  "and",
-  "are",
-  "as",
-  "at",
-  "be",
-  "best",
-  "did",
-  "do",
-  "find",
-  "for",
-  "from",
-  "i",
-  "in",
-  "is",
-  "it",
-  "me",
-  "my",
-  "of",
-  "on",
-  "or",
-  "saved",
-  "show",
-  "summarize",
-  "tell",
-  "that",
-  "the",
-  "to",
-  "was",
-  "were",
-  "what",
-  "with",
-]);
 
 export async function askLibrary(question: string): Promise<AskState> {
   const normalizedQuestion = question.trim();
@@ -66,18 +32,15 @@ export async function askLibrary(question: string): Promise<AskState> {
     return { status: "idle", question: "" };
   }
 
-  const queryTerms = tokenize(normalizedQuestion);
-
-  if (queryTerms.length === 0) {
-    return { status: "no-results", question: normalizedQuestion };
-  }
-
   const db = getDb();
   const userId = await getDevUserId(db);
+  const [questionEmbedding] = await createEmbeddings([normalizedQuestion]);
+  const distance = sql<number>`${chunks.embedding} <=> ${toVectorLiteral(questionEmbedding)}::vector`;
   const rows = await db
     .select({
       chunkIndex: chunks.chunkIndex,
       content: chunks.content,
+      distance,
       itemId: items.id,
       sourceType: items.sourceType,
       title: items.title,
@@ -85,29 +48,18 @@ export async function askLibrary(question: string): Promise<AskState> {
     })
     .from(chunks)
     .innerJoin(items, eq(items.id, chunks.itemId))
-    .where(eq(items.userId, userId))
-    .orderBy(desc(items.createdAt), chunks.chunkIndex)
-    .limit(500);
+    .where(and(eq(items.userId, userId), isNotNull(chunks.embedding)))
+    .orderBy(distance)
+    .limit(5);
 
-  const ranked = rows
-    .map((row) => ({
-      ...row,
-      score: scoreChunk({
-        content: row.content,
-        query: normalizedQuestion,
-        terms: queryTerms,
-        title: row.title,
-      }),
-    }))
-    .filter((row) => row.score > 0)
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 5);
-
-  if (ranked.length === 0) {
+  if (rows.length === 0) {
     return { status: "no-results", question: normalizedQuestion };
   }
 
-  const citations = ranked.map(({ score: _score, ...row }) => row);
+  const citations = rows.map(({ distance: citationDistance, ...row }) => ({
+    ...row,
+    similarity: 1 - citationDistance,
+  }));
 
   return {
     status: "ready",
@@ -132,56 +84,6 @@ function composeAnswer(citations: AskCitation[]) {
   ].join("\n\n");
 }
 
-function scoreChunk({
-  content,
-  query,
-  terms,
-  title,
-}: {
-  content: string;
-  query: string;
-  terms: string[];
-  title: string;
-}) {
-  const searchableContent = content.toLowerCase();
-  const searchableTitle = title.toLowerCase();
-  const normalizedQuery = query.toLowerCase();
-  let score = searchableContent.includes(normalizedQuery) ? 8 : 0;
-
-  for (const term of terms) {
-    score += countMatches(searchableContent, term);
-
-    if (searchableTitle.includes(term)) {
-      score += 3;
-    }
-  }
-
-  return score;
-}
-
-function tokenize(value: string) {
-  return Array.from(
-    new Set(
-      value
-        .toLowerCase()
-        .match(/[a-z0-9]+/g)
-        ?.filter((term) => term.length > 1 && !STOP_WORDS.has(term)) ?? [],
-    ),
-  );
-}
-
-function countMatches(value: string, term: string) {
-  let count = 0;
-  let index = value.indexOf(term);
-
-  while (index !== -1) {
-    count += 1;
-    index = value.indexOf(term, index + term.length);
-  }
-
-  return count;
-}
-
 function excerpt(value: string) {
   const compact = value.replace(/\s+/g, " ").trim();
 
@@ -190,4 +92,8 @@ function excerpt(value: string) {
   }
 
   return `${compact.slice(0, 317).trim()}...`;
+}
+
+function toVectorLiteral(embedding: number[]) {
+  return JSON.stringify(embedding);
 }
