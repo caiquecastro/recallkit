@@ -1,3 +1,5 @@
+import OpenAI from "openai";
+
 import { env } from "@/env";
 
 export type AiProvider = "openai" | "openrouter";
@@ -13,16 +15,6 @@ export type AiEndpointConfig = {
 export type AiConfig = {
   chat: AiEndpointConfig;
   embeddings: AiEndpointConfig;
-};
-
-type EmbeddingsResponse = {
-  data?: Array<{
-    embedding?: unknown;
-    index?: number;
-  }>;
-  error?: {
-    message?: string;
-  };
 };
 
 const embeddingDimensions = 1536;
@@ -48,39 +40,34 @@ export async function createEmbeddings(input: string[]) {
   }
 
   const config = getEmbeddingConfig();
-  const response = await fetch(`${config.baseUrl}/embeddings`, {
-    body: JSON.stringify({
+  const client = createOpenAiClient(config);
+  const response = await client.embeddings.create(
+    {
       input,
       model: config.model,
-    }),
-    headers: {
-      ...config.headers,
-      authorization: `Bearer ${config.apiKey}`,
-      "content-type": "application/json",
     },
-    method: "POST",
-    signal: AbortSignal.timeout(30_000),
-  });
-  const payload = (await response
-    .json()
-    .catch(() => ({}))) as EmbeddingsResponse;
-
-  if (!response.ok) {
-    throw new Error(
-      payload.error?.message ??
-        `Unable to create embeddings. Received ${response.status}.`,
-    );
-  }
-
-  const embeddings = payload.data
-    ?.toSorted((left, right) => (left.index ?? 0) - (right.index ?? 0))
+    {
+      timeout: 30_000,
+    },
+  );
+  const embeddings = response.data
+    .toSorted((left, right) => left.index - right.index)
     .map((item) => item.embedding);
 
-  if (!embeddings || embeddings.length !== input.length) {
+  if (embeddings.length !== input.length) {
     throw new Error("Embedding response did not match the requested chunks.");
   }
 
   return embeddings.map(validateEmbedding);
+}
+
+function createOpenAiClient(config: AiEndpointConfig) {
+  return new OpenAI({
+    apiKey: config.apiKey,
+    baseURL: config.baseUrl,
+    defaultHeaders: config.headers,
+    maxRetries: 2,
+  });
 }
 
 function getAiEndpointConfig(kind: "chat" | "embeddings"): AiEndpointConfig {
@@ -129,7 +116,7 @@ function requireProviderEnv(name: string, value: string | undefined) {
   return value;
 }
 
-function validateEmbedding(value: unknown) {
+function validateEmbedding(value: unknown): number[] {
   if (
     !Array.isArray(value) ||
     value.length !== embeddingDimensions ||
@@ -140,5 +127,5 @@ function validateEmbedding(value: unknown) {
     );
   }
 
-  return value;
+  return value as number[];
 }
