@@ -47,6 +47,18 @@ export async function createUrlItem(formData: FormData) {
   });
 }
 
+export async function deleteLibraryItem(formData: FormData) {
+  const itemId = requireValue(getOptionalString(formData, "itemId"), "itemId");
+  const db = getDb();
+  const userId = await getDevUserId(db);
+
+  await db
+    .delete(items)
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)));
+
+  redirect("/library");
+}
+
 async function createLibraryItem({
   collectionName,
   source,

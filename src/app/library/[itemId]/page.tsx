@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { deleteLibraryItem } from "@/app/actions";
 import { getItemDetail } from "@/lib/library";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,21 @@ export default async function ItemDetailPage({
         <div className="mt-4 whitespace-pre-wrap text-zinc-800 leading-7">
           {item.document?.cleanedText ?? item.contentText}
         </div>
+      </section>
+
+      <section className="panel flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="section-title">Danger zone</h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            Delete this item and its indexed chunks from your library.
+          </p>
+        </div>
+        <form action={deleteLibraryItem}>
+          <input name="itemId" type="hidden" value={item.id} />
+          <button className="destructive-button" type="submit">
+            Delete item
+          </button>
+        </form>
       </section>
     </article>
   );

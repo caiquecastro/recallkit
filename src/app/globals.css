@@ -73,7 +73,8 @@ body {
 }
 
 .primary-button,
-.secondary-button {
+.secondary-button,
+.destructive-button {
   align-items: center;
   border-radius: 6px;
   display: inline-flex;
@@ -100,6 +101,15 @@ body {
 
 .secondary-button:hover {
   background: #f4f4f5;
+}
+
+.destructive-button {
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.destructive-button:hover {
+  background: #991b1b;
 }
 
 .list-row {
