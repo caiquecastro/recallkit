@@ -13,6 +13,7 @@ import {
   itemTags,
   tags,
 } from "@/db/schema";
+import { createEmbeddings } from "@/lib/ai";
 import { getDevUserId } from "@/lib/dev-user";
 
 type DatabaseExecutor = Pick<ReturnType<typeof getDb>, "insert" | "select">;
@@ -58,6 +59,8 @@ async function createLibraryItem({
   tagNames: string[];
 }) {
   const db = getDb();
+  const chunkContents = chunkText(source.content);
+  const embeddings = await createEmbeddings(chunkContents);
 
   const itemId = await db.transaction(async (tx) => {
     const userId = await getDevUserId(tx);
@@ -86,15 +89,14 @@ async function createLibraryItem({
       })
       .returning({ id: documents.id });
 
-    const chunkValues = chunkText(source.content).map(
-      (content, chunkIndex) => ({
-        documentId: document.id,
-        itemId: item.id,
-        content,
-        chunkIndex,
-        metadata: { sourceType },
-      }),
-    );
+    const chunkValues = chunkContents.map((content, chunkIndex) => ({
+      documentId: document.id,
+      embedding: embeddings[chunkIndex],
+      itemId: item.id,
+      content,
+      chunkIndex,
+      metadata: { sourceType },
+    }));
 
     if (chunkValues.length > 0) {
       await tx.insert(chunks).values(chunkValues);

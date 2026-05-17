@@ -15,6 +15,18 @@ export type AiConfig = {
   embeddings: AiEndpointConfig;
 };
 
+type EmbeddingsResponse = {
+  data?: Array<{
+    embedding?: unknown;
+    index?: number;
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
+const embeddingDimensions = 1536;
+
 export function getAiConfig(): AiConfig {
   return {
     chat: getAiEndpointConfig("chat"),
@@ -28,6 +40,47 @@ export function getChatConfig() {
 
 export function getEmbeddingConfig() {
   return getAiEndpointConfig("embeddings");
+}
+
+export async function createEmbeddings(input: string[]) {
+  if (input.length === 0) {
+    return [];
+  }
+
+  const config = getEmbeddingConfig();
+  const response = await fetch(`${config.baseUrl}/embeddings`, {
+    body: JSON.stringify({
+      input,
+      model: config.model,
+    }),
+    headers: {
+      ...config.headers,
+      authorization: `Bearer ${config.apiKey}`,
+      "content-type": "application/json",
+    },
+    method: "POST",
+    signal: AbortSignal.timeout(30_000),
+  });
+  const payload = (await response
+    .json()
+    .catch(() => ({}))) as EmbeddingsResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      payload.error?.message ??
+        `Unable to create embeddings. Received ${response.status}.`,
+    );
+  }
+
+  const embeddings = payload.data
+    ?.toSorted((left, right) => (left.index ?? 0) - (right.index ?? 0))
+    .map((item) => item.embedding);
+
+  if (!embeddings || embeddings.length !== input.length) {
+    throw new Error("Embedding response did not match the requested chunks.");
+  }
+
+  return embeddings.map(validateEmbedding);
 }
 
 function getAiEndpointConfig(kind: "chat" | "embeddings"): AiEndpointConfig {
@@ -71,6 +124,20 @@ function getOpenRouterHeaders() {
 function requireProviderEnv(name: string, value: string | undefined) {
   if (!value) {
     throw new Error(`${name} is required for the selected AI provider.`);
+  }
+
+  return value;
+}
+
+function validateEmbedding(value: unknown) {
+  if (
+    !Array.isArray(value) ||
+    value.length !== embeddingDimensions ||
+    !value.every((entry) => typeof entry === "number")
+  ) {
+    throw new Error(
+      `Embedding response must contain ${embeddingDimensions} numeric dimensions.`,
+    );
   }
 
   return value;
