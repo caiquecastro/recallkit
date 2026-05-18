@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { createNote } from "@/app/actions";
+import { CaptureMetadataFields } from "@/app/new/capture-metadata-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default function NewNotePage() {
           />
         </label>
 
-        <SharedFields />
+        <CaptureMetadataFields
+          collectionPlaceholder="Tennis Gear"
+          tagsPlaceholder="tennis, rackets"
+        />
 
         <div className="flex items-center justify-between gap-3">
           <Link className="secondary-button" href="/new">
@@ -44,22 +48,6 @@ export default function NewNotePage() {
           </button>
         </div>
       </form>
-    </div>
-  );
-}
-
-function SharedFields() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <label className="grid gap-2">
-        <span className="field-label">Tags</span>
-        <input className="field" name="tags" placeholder="tennis, rackets" />
-      </label>
-
-      <label className="grid gap-2">
-        <span className="field-label">Collection</span>
-        <input className="field" name="collection" placeholder="Tennis Gear" />
-      </label>
     </div>
   );
 }

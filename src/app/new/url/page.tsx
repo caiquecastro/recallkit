@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { createUrlItem } from "@/app/actions";
+import { CaptureMetadataFields } from "@/app/new/capture-metadata-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default function NewUrlPage() {
           />
         </label>
 
-        <SharedFields />
+        <CaptureMetadataFields
+          collectionPlaceholder="Research"
+          tagsPlaceholder="docs, research"
+        />
 
         <div className="flex items-center justify-between gap-3">
           <Link className="secondary-button" href="/new">
@@ -44,22 +48,6 @@ export default function NewUrlPage() {
           </button>
         </div>
       </form>
-    </div>
-  );
-}
-
-function SharedFields() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <label className="grid gap-2">
-        <span className="field-label">Tags</span>
-        <input className="field" name="tags" placeholder="docs, research" />
-      </label>
-
-      <label className="grid gap-2">
-        <span className="field-label">Collection</span>
-        <input className="field" name="collection" placeholder="Research" />
-      </label>
     </div>
   );
 }
