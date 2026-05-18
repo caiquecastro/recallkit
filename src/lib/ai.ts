@@ -61,6 +61,38 @@ export async function createEmbeddings(input: string[]) {
   return embeddings.map(validateEmbedding);
 }
 
+export async function createChatAnswer({
+  input,
+  instructions,
+}: {
+  input: string;
+  instructions: string;
+}) {
+  const config = getChatConfig();
+  const client = createOpenAiClient(config);
+  const response = await client.chat.completions.create(
+    {
+      max_completion_tokens: 900,
+      messages: [
+        { role: "developer", content: instructions },
+        { role: "user", content: input },
+      ],
+      model: config.model,
+      store: false,
+    },
+    {
+      timeout: 45_000,
+    },
+  );
+  const content = response.choices[0]?.message.content;
+
+  if (!content) {
+    throw new Error("Chat response did not include answer content.");
+  }
+
+  return content.trim();
+}
+
 function createOpenAiClient(config: AiEndpointConfig) {
   return new OpenAI({
     apiKey: config.apiKey,

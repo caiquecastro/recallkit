@@ -18,6 +18,7 @@ import { getDevUserId } from "@/lib/dev-user";
 
 type DatabaseExecutor = Pick<ReturnType<typeof getDb>, "insert" | "select">;
 type SourceType = "note" | "url";
+const maxItemTitleLength = 240;
 
 export async function createNote(formData: FormData) {
   const source = await resolveNoteContent({
@@ -157,7 +158,7 @@ async function resolveNoteContent(input: { content: string; title: string }) {
     content,
     metadata: {},
     summary: null,
-    title: requireValue(input.title, "title"),
+    title: normalizeTitle(requireValue(input.title, "title")),
     url: null,
   } satisfies ResolvedSource;
 }
@@ -175,7 +176,7 @@ async function resolveUrlContent(input: { title: string; url: string }) {
       fetchedAt: new Date().toISOString(),
     },
     summary: extracted.description,
-    title,
+    title: normalizeTitle(title),
     url,
   } satisfies ResolvedSource;
 }
@@ -229,6 +230,18 @@ function normalizeUrl(value: string) {
   }
 
   return url.toString();
+}
+
+function normalizeTitle(value: string) {
+  return truncateText(value.replace(/\s+/g, " ").trim(), maxItemTitleLength);
+}
+
+function truncateText(value: string, maxLength: number) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, maxLength - 3).trim()}...`;
 }
 
 function extractTitle(html: string) {

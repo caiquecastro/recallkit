@@ -2,7 +2,7 @@ import { and, eq, isNotNull, sql } from "drizzle-orm";
 
 import { getDb } from "@/db/client";
 import { chunks, items } from "@/db/schema";
-import { createEmbeddings } from "@/lib/ai";
+import { createChatAnswer, createEmbeddings } from "@/lib/ai";
 import { getDevUserId } from "@/lib/dev-user";
 
 export type AskState =
@@ -63,35 +63,49 @@ export async function askLibrary(question: string): Promise<AskState> {
 
   return {
     status: "ready",
-    answer: composeAnswer(citations),
+    answer: await composeAnswer(normalizedQuestion, citations),
     citations,
     question: normalizedQuestion,
   };
 }
 
-function composeAnswer(citations: AskCitation[]) {
-  const lead =
-    citations.length === 1
-      ? "I found one relevant saved item:"
-      : `I found ${citations.length} relevant saved items:`;
+async function composeAnswer(question: string, citations: AskCitation[]) {
+  return createChatAnswer({
+    instructions: [
+      "You answer questions over a personal saved library.",
+      "Use only the provided source passages as evidence.",
+      "Cite claims with bracketed source numbers like [1] or [2].",
+      "If the passages do not contain enough information, say what is missing.",
+      "Keep the answer concise and directly useful.",
+    ].join(" "),
+    input: [
+      `Question: ${question}`,
+      "",
+      "Sources:",
+      ...citations.map(formatCitationForPrompt),
+    ].join("\n"),
+  });
+}
 
+function formatCitationForPrompt(citation: AskCitation, index: number) {
   return [
-    lead,
-    ...citations.map(
-      (citation, index) =>
-        `[${index + 1}] ${citation.title}: ${excerpt(citation.content)}`,
-    ),
-  ].join("\n\n");
+    `[${index + 1}] ${citation.title}`,
+    `Type: ${citation.sourceType}`,
+    citation.url ? `URL: ${citation.url}` : null,
+    `Passage: ${excerpt(citation.content)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function excerpt(value: string) {
   const compact = value.replace(/\s+/g, " ").trim();
 
-  if (compact.length <= 320) {
+  if (compact.length <= 1_200) {
     return compact;
   }
 
-  return `${compact.slice(0, 317).trim()}...`;
+  return `${compact.slice(0, 1_197).trim()}...`;
 }
 
 function toVectorLiteral(embedding: number[]) {
