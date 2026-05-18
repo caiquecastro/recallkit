@@ -55,10 +55,14 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    clerkUserId: varchar("clerk_user_id", { length: 64 }),
     email: varchar("email", { length: 320 }).notNull(),
     ...timestamps,
   },
-  (table) => [uniqueIndex("users_email_idx").on(table.email)],
+  (table) => [
+    uniqueIndex("users_clerk_user_id_idx").on(table.clerkUserId),
+    uniqueIndex("users_email_idx").on(table.email),
+  ],
 );
 
 export const collections = pgTable(

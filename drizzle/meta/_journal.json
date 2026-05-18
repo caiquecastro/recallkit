@@ -8,6 +8,13 @@
       "when": 1778961212872,
       "tag": "0000_chief_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779071430958,
+      "tag": "0001_fast_vanisher",
+      "breakpoints": true
     }
   ]
 }

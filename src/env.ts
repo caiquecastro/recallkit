@@ -4,6 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
+    CLERK_SECRET_KEY: z.string().min(1).optional(),
     AI_CHAT_PROVIDER: z.enum(["openai", "openrouter"]).default("openai"),
     AI_EMBEDDING_PROVIDER: z.enum(["openai", "openrouter"]).default("openai"),
     OPENAI_API_KEY: z.string().min(1).optional(),
@@ -23,9 +24,14 @@ export const env = createEnv({
     OPENROUTER_SITE_URL: z.string().url().optional(),
     OPENROUTER_APP_NAME: z.string().min(1).default("RecallKit"),
   },
-  client: {},
+  client: {
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     AI_CHAT_PROVIDER: process.env.AI_CHAT_PROVIDER,
     AI_EMBEDDING_PROVIDER: process.env.AI_EMBEDDING_PROVIDER,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
