@@ -12,9 +12,6 @@ import {
 import { getDevUserId } from "@/lib/dev-user";
 import { groupLibraryRows, type LibraryItem } from "@/lib/library-rows";
 
-export { groupLibraryRows };
-export type { LibraryItem, LibraryItemRow } from "@/lib/library-rows";
-
 export type LibraryState = { status: "ready"; items: LibraryItem[] };
 
 export type ItemDetailState =
