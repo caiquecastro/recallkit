@@ -10,20 +10,12 @@ import {
   tags,
 } from "@/db/schema";
 import { getDevUserId } from "@/lib/dev-user";
+import { groupLibraryRows, type LibraryItem } from "@/lib/library-rows";
+
+export { groupLibraryRows };
+export type { LibraryItem, LibraryItemRow } from "@/lib/library-rows";
 
 export type LibraryState = { status: "ready"; items: LibraryItem[] };
-
-export type LibraryItem = {
-  id: string;
-  title: string;
-  sourceType: "url" | "pdf" | "note" | "video" | "document";
-  status: "draft" | "processing" | "ready" | "failed";
-  summary: string | null;
-  url: string | null;
-  createdAt: Date;
-  tags: string[];
-  collections: string[];
-};
 
 export type ItemDetailState =
   | { status: "not-found" }
@@ -127,48 +119,4 @@ export async function getItemDetail(itemId: string): Promise<ItemDetailState> {
           : null,
     },
   };
-}
-
-function groupLibraryRows(
-  rows: Array<{
-    id: string;
-    title: string;
-    sourceType: LibraryItem["sourceType"];
-    status: LibraryItem["status"];
-    summary: string | null;
-    url: string | null;
-    createdAt: Date;
-    tagName: string | null;
-    collectionName: string | null;
-  }>,
-) {
-  const grouped = new Map<string, LibraryItem>();
-
-  for (const row of rows) {
-    const item =
-      grouped.get(row.id) ??
-      ({
-        id: row.id,
-        title: row.title,
-        sourceType: row.sourceType,
-        status: row.status,
-        summary: row.summary,
-        url: row.url,
-        createdAt: row.createdAt,
-        tags: [],
-        collections: [],
-      } satisfies LibraryItem);
-
-    if (row.tagName && !item.tags.includes(row.tagName)) {
-      item.tags.push(row.tagName);
-    }
-
-    if (row.collectionName && !item.collections.includes(row.collectionName)) {
-      item.collections.push(row.collectionName);
-    }
-
-    grouped.set(row.id, item);
-  }
-
-  return Array.from(grouped.values());
 }
