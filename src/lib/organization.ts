@@ -16,6 +16,23 @@ export const organizationEntityTypes = [
 
 export type OrganizationEntityType = (typeof organizationEntityTypes)[number];
 
+const organizationEntityTypeSet = new Set<string>(organizationEntityTypes);
+
+const organizationEntityTypeAliases: Record<string, OrganizationEntityType> = {
+  app: "product",
+  business: "organization",
+  company: "organization",
+  concept: "topic",
+  country: "place",
+  library: "tool",
+  location: "place",
+  org: "organization",
+  platform: "tool",
+  service: "product",
+  software: "product",
+  technology: "tool",
+};
+
 export type LibraryItemOrganization = {
   collection: string | null;
   entities: Array<{
@@ -49,7 +66,10 @@ const organizationSchema = z.object({
       z.object({
         confidence: z.number().min(0).max(1),
         name: z.string(),
-        type: z.enum(organizationEntityTypes),
+        type: z.preprocess(
+          normalizeEntityType,
+          z.enum(organizationEntityTypes),
+        ),
       }),
     )
     .max(12),
@@ -91,7 +111,7 @@ function formatOrganizationPrompt(input: OrganizeLibraryItemInput) {
     "- summary: one or two sentences.",
     "- tags: lowercase short labels, no hash symbols.",
     "- collection: a broad reusable bucket, or null.",
-    "- entities: include name, type, and confidence from 0 to 1.",
+    `- entities: include name, type, and confidence from 0 to 1. Type must be one of: ${organizationEntityTypes.join(", ")}.`,
     "",
     "Content:",
     truncateText(input.content, maxPromptContentLength),
@@ -123,6 +143,23 @@ function normalizeOrganization(
       maxTitleLength,
     ),
   };
+}
+
+function normalizeEntityType(value: unknown): OrganizationEntityType {
+  if (typeof value !== "string") {
+    return "other";
+  }
+
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+  if (organizationEntityTypeSet.has(normalized)) {
+    return normalized as OrganizationEntityType;
+  }
+
+  return organizationEntityTypeAliases[normalized] ?? "other";
 }
 
 function extractJsonObject(value: string) {
