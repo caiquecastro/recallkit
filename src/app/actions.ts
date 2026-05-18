@@ -9,12 +9,14 @@ import {
   collectionItems,
   collections,
   documents,
+  entities,
   items,
   itemTags,
   tags,
 } from "@/db/schema";
 import { createEmbeddings } from "@/lib/ai";
 import { getDevUserId } from "@/lib/dev-user";
+import { organizeLibraryItem } from "@/lib/organization";
 
 type DatabaseExecutor = Pick<ReturnType<typeof getDb>, "insert" | "select">;
 type SourceType = "note" | "url";
@@ -73,7 +75,21 @@ async function createLibraryItem({
 }) {
   const db = getDb();
   const chunkContents = chunkText(source.content);
-  const embeddings = await createEmbeddings(chunkContents);
+  const [embeddings, organization] = await Promise.all([
+    createEmbeddings(chunkContents),
+    organizeLibraryItem({
+      content: source.content,
+      sourceType,
+      title: source.title,
+      url: source.url,
+    }),
+  ]);
+  const itemMetadata = {
+    ...source.metadata,
+    organization,
+  };
+  const resolvedTagNames = mergeTags(tagNames, organization.tags);
+  const resolvedCollectionName = collectionName || organization.collection;
 
   const itemId = await db.transaction(async (tx) => {
     const userId = await getDevUserId(tx);
@@ -82,13 +98,13 @@ async function createLibraryItem({
       .insert(items)
       .values({
         userId,
-        title: source.title,
+        title: organization.title,
         sourceType,
         url: source.url,
         contentText: source.content,
-        summary: source.summary,
+        summary: organization.summary,
         status: "ready",
-        metadata: source.metadata,
+        metadata: itemMetadata,
       })
       .returning({ id: items.id });
 
@@ -98,7 +114,7 @@ async function createLibraryItem({
         itemId: item.id,
         rawText: source.content,
         cleanedText: source.content.trim(),
-        metadata: source.metadata,
+        metadata: itemMetadata,
       })
       .returning({ id: documents.id });
 
@@ -115,7 +131,7 @@ async function createLibraryItem({
       await tx.insert(chunks).values(chunkValues);
     }
 
-    for (const tagName of tagNames) {
+    for (const tagName of resolvedTagNames) {
       const tagId = await resolveTagId(tx, userId, tagName);
 
       await tx
@@ -124,17 +140,28 @@ async function createLibraryItem({
         .onConflictDoNothing();
     }
 
-    if (collectionName) {
+    if (resolvedCollectionName) {
       const collectionId = await resolveCollectionId(
         tx,
         userId,
-        collectionName,
+        resolvedCollectionName,
       );
 
       await tx
         .insert(collectionItems)
         .values({ collectionId, itemId: item.id })
         .onConflictDoNothing();
+    }
+
+    if (organization.entities.length > 0) {
+      await tx.insert(entities).values(
+        organization.entities.map((entity) => ({
+          confidence: entity.confidence,
+          itemId: item.id,
+          name: entity.name,
+          type: entity.type,
+        })),
+      );
     }
 
     return item.id;
@@ -146,7 +173,6 @@ async function createLibraryItem({
 type ResolvedSource = {
   content: string;
   metadata: Record<string, unknown>;
-  summary: string | null;
   title: string;
   url: string | null;
 };
@@ -157,7 +183,6 @@ async function resolveNoteContent(input: { content: string; title: string }) {
   return {
     content,
     metadata: {},
-    summary: null,
     title: normalizeTitle(requireValue(input.title, "title")),
     url: null,
   } satisfies ResolvedSource;
@@ -175,7 +200,6 @@ async function resolveUrlContent(input: { title: string; url: string }) {
       description: extracted.description,
       fetchedAt: new Date().toISOString(),
     },
-    summary: extracted.description,
     title: normalizeTitle(title),
     url,
   } satisfies ResolvedSource;
@@ -319,6 +343,25 @@ function parseTags(value: string) {
         .filter(Boolean),
     ),
   );
+}
+
+function mergeTags(manualTags: string[], organizedTags: string[]) {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  for (const tag of [...manualTags, ...organizedTags]) {
+    const normalized = tag.trim();
+    const key = normalized.toLowerCase();
+
+    if (!normalized || seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    merged.push(normalized);
+  }
+
+  return merged;
 }
 
 async function resolveTagId(
