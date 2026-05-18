@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { MetaLine } from "@/app/library/meta-line";
 import { getLibraryItems } from "@/lib/library";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ export default async function LibraryPage() {
                   </p>
                 ) : null}
                 <MetaLine
+                  className="mt-3"
                   collections={item.collections}
                   date={item.createdAt}
                   tags={item.tags}
@@ -54,26 +56,4 @@ export default async function LibraryPage() {
       )}
     </div>
   );
-}
-
-function MetaLine({
-  collections,
-  date,
-  tags,
-}: {
-  collections: string[];
-  date: Date;
-  tags: string[];
-}) {
-  const parts = [
-    date.toLocaleDateString("en", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }),
-    ...collections,
-    ...tags.map((tag) => `#${tag}`),
-  ];
-
-  return <p className="mt-3 text-sm text-zinc-500">{parts.join(" · ")}</p>;
 }

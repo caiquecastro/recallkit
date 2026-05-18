@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { deleteLibraryItem } from "@/app/actions";
+import { MetaLine } from "@/app/library/meta-line";
 import { getItemDetail } from "@/lib/library";
 
 export const dynamic = "force-dynamic";
@@ -82,26 +83,4 @@ export default async function ItemDetailPage({
       </section>
     </article>
   );
-}
-
-function MetaLine({
-  collections,
-  date,
-  tags,
-}: {
-  collections: string[];
-  date: Date;
-  tags: string[];
-}) {
-  const parts = [
-    date.toLocaleDateString("en", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }),
-    ...collections,
-    ...tags.map((tag) => `#${tag}`),
-  ];
-
-  return <p className="text-sm text-zinc-500">{parts.join(" · ")}</p>;
 }
