@@ -32,14 +32,16 @@ export default async function LibraryPage() {
               href={`/library/${item.id}`}
               key={item.id}
             >
-              <div className="min-w-0">
+              <div className="min-w-0 max-w-full">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate font-medium text-lg">{item.title}</h2>
+                  <h2 className="wrap-anywhere min-w-0 max-w-full font-medium text-lg">
+                    {item.title}
+                  </h2>
                   <span className="badge">{item.sourceType}</span>
                   <span className="badge">{item.status}</span>
                 </div>
                 {item.summary ? (
-                  <p className="mt-2 line-clamp-2 text-sm text-zinc-600">
+                  <p className="wrap-anywhere mt-2 line-clamp-2 text-sm text-zinc-600">
                     {item.summary}
                   </p>
                 ) : null}

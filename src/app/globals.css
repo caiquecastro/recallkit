@@ -33,6 +33,7 @@ body {
   background: #ffffff;
   border: 1px solid #e4e4e7;
   border-radius: 8px;
+  min-width: 0;
   padding: 1.25rem;
 }
 
@@ -117,7 +118,13 @@ body {
   border: 1px solid #e4e4e7;
   border-radius: 8px;
   display: block;
+  min-width: 0;
   padding: 1rem;
+}
+
+.wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .badge {

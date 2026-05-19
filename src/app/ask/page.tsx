@@ -16,7 +16,7 @@ export default async function AskPage({ searchParams }: AskPageProps) {
   const state = await askLibrary(question);
 
   return (
-    <div className="grid max-w-4xl gap-6">
+    <div className="grid max-w-4xl min-w-0 gap-6">
       <div className="grid gap-2">
         <p className="text-sm font-medium text-teal-700">Query</p>
         <h1 className="font-semibold text-3xl tracking-tight">Ask</h1>
@@ -64,7 +64,7 @@ export default async function AskPage({ searchParams }: AskPageProps) {
         <section className="grid gap-4">
           <div className="panel">
             <h2 className="section-title">Answer</h2>
-            <p className="mt-4 whitespace-pre-wrap text-zinc-800 leading-7">
+            <p className="wrap-anywhere mt-4 whitespace-pre-wrap text-zinc-800 leading-7">
               {state.answer}
             </p>
           </div>
@@ -81,7 +81,7 @@ export default async function AskPage({ searchParams }: AskPageProps) {
                   <span className="badge">{citation.sourceType}</span>
                   <span className="badge">chunk {citation.chunkIndex + 1}</span>
                 </div>
-                <h3 className="mt-3 font-medium text-lg">
+                <h3 className="wrap-anywhere mt-3 font-medium text-lg">
                   <Link
                     className="hover:text-teal-800"
                     href={`/library/${citation.itemId}`}
@@ -89,7 +89,7 @@ export default async function AskPage({ searchParams }: AskPageProps) {
                     {citation.title}
                   </Link>
                 </h3>
-                <p className="mt-2 line-clamp-3 text-sm text-zinc-600">
+                <p className="wrap-anywhere mt-2 line-clamp-3 text-sm text-zinc-600">
                   {citation.content}
                 </p>
                 {citation.url ? (

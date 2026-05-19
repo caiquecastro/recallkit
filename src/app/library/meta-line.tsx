@@ -23,7 +23,9 @@ export function MetaLine({
 
   return (
     <p
-      className={["text-sm text-zinc-500", className].filter(Boolean).join(" ")}
+      className={["wrap-anywhere text-sm text-zinc-500", className]
+        .filter(Boolean)
+        .join(" ")}
     >
       {parts.join(" · ")}
     </p>

@@ -22,7 +22,7 @@ export default async function ItemDetailPage({
   const { item } = state;
 
   return (
-    <article className="grid max-w-4xl gap-6">
+    <article className="grid max-w-4xl min-w-0 gap-6">
       <Link
         className="text-sm text-teal-700 hover:text-teal-900"
         href="/library"
@@ -35,7 +35,9 @@ export default async function ItemDetailPage({
           <span className="badge">{item.sourceType}</span>
           <span className="badge">{item.status}</span>
         </div>
-        <h1 className="font-semibold text-3xl tracking-tight">{item.title}</h1>
+        <h1 className="wrap-anywhere font-semibold text-3xl tracking-tight">
+          {item.title}
+        </h1>
         <MetaLine
           collections={item.collections}
           date={item.createdAt}
@@ -56,13 +58,13 @@ export default async function ItemDetailPage({
       {item.summary ? (
         <section className="panel">
           <h2 className="section-title">Summary</h2>
-          <p className="mt-3 text-zinc-700">{item.summary}</p>
+          <p className="wrap-anywhere mt-3 text-zinc-700">{item.summary}</p>
         </section>
       ) : null}
 
       <section className="panel">
         <h2 className="section-title">Content</h2>
-        <div className="mt-4 whitespace-pre-wrap text-zinc-800 leading-7">
+        <div className="wrap-anywhere mt-4 whitespace-pre-wrap text-zinc-800 leading-7">
           {item.document?.cleanedText ?? item.contentText}
         </div>
       </section>
