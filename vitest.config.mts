@@ -17,7 +17,7 @@ export default defineConfig({
       ],
       include: ["src/lib/**/*.ts"],
       provider: "v8",
-      reporter: ["text", "html"],
+      reporter: ["text", "json-summary", "html"],
     },
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
