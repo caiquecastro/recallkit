@@ -15,11 +15,16 @@ RecallKit is a Next.js 16 App Router project. Route entry points live in `src/ap
 - `pnpm dev`: start the local Next.js development server.
 - `pnpm build`: create a production build.
 - `pnpm start`: serve the production build.
+- `pnpm test`: run the unit test suite.
+- `pnpm test:unit`: run Vitest once.
+- `pnpm test:unit:watch`: run Vitest in watch mode.
 - `pnpm lint`: run Biome checks, including lint rules and import organization.
 - `pnpm format`: format files with Biome.
 - `pnpm db:up` / `pnpm db:down`: start or stop the local Postgres service.
+- `pnpm db:reset`: recreate the local Postgres service and volume.
 - `pnpm db:migrate`: apply Drizzle migrations.
 - `pnpm db:generate`: generate migrations after schema changes.
+- `pnpm db:push`: push schema changes directly with Drizzle Kit.
 - `pnpm db:studio`: inspect local data in Drizzle Studio.
 
 ## Coding Style & Naming Conventions
@@ -28,7 +33,7 @@ Write TypeScript and React with 2-space indentation. Follow Biome defaults in `b
 
 ## Testing Guidelines
 
-There is currently no test runner or `pnpm test` script. For now, validate changes with `pnpm lint`, `pnpm build`, and focused manual checks in the affected route. When adding tests, include the script in `package.json` and place tests near the code, using names like `library.test.ts` or `page.test.tsx`.
+Unit tests use Vitest. Place tests near the code they cover, using names like `library.test.ts` or `page.test.tsx`. Validate most changes with `pnpm test:unit`, `pnpm lint`, `pnpm build`, and focused manual checks in the affected route.
 
 ## Commit & Pull Request Guidelines
 

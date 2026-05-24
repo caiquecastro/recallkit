@@ -165,7 +165,7 @@ The main schema lives in `src/db/schema.ts`.
 ## Development Notes
 
 - This repository uses Next.js 16. Before changing framework-specific behavior, check the bundled docs in `node_modules/next/dist/docs/` because this version may differ from older Next.js conventions.
-- There is no test runner configured yet. Use `pnpm lint`, `pnpm build`, and focused manual checks for the affected routes.
+- Unit tests use Vitest. Use `pnpm test:unit`, `pnpm lint`, `pnpm build`, and focused manual checks for the affected routes.
 - URL ingestion is intentionally lightweight today. It accepts only HTML and plain text responses and strips markup with simple parsing.
 - PDF, video, document upload, background jobs, hosted auth, and browser-extension capture are planned but not implemented in the current app.
 
@@ -175,6 +175,7 @@ For most changes, run:
 
 ```bash
 pnpm lint
+pnpm test:unit
 pnpm build
 ```
 
