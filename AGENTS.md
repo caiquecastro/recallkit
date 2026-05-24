@@ -17,6 +17,7 @@ RecallKit is a Next.js 16 App Router project. Route entry points live in `src/ap
 - `pnpm start`: serve the production build.
 - `pnpm test`: run the unit test suite.
 - `pnpm test:unit`: run Vitest once.
+- `pnpm test:coverage`: run Vitest with coverage reporting.
 - `pnpm test:unit:watch`: run Vitest in watch mode.
 - `pnpm lint`: run Biome checks, including lint rules and import organization.
 - `pnpm format`: format files with Biome.

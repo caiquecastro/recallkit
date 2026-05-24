@@ -74,4 +74,34 @@ describe("organizeLibraryItem", () => {
       title: "Original title",
     });
   });
+
+  it("preserves the first unique entity when duplicates appear", async () => {
+    createChatAnswerMock.mockResolvedValueOnce(
+      JSON.stringify({
+        title: "Madrid restaurants",
+        summary: "Saved places to eat in Madrid.",
+        tags: [],
+        collection: null,
+        entities: [
+          { name: "Madrid", type: "city", confidence: 0.95 },
+          { name: " madrid ", type: "city", confidence: 0.6 },
+          { name: "Madrid", type: "place", confidence: 0.7 },
+        ],
+      }),
+    );
+
+    await expect(
+      organizeLibraryItem({
+        content: "Restaurants and neighborhoods to try in Madrid.",
+        sourceType: "note",
+        title: "Madrid restaurants",
+        url: null,
+      }),
+    ).resolves.toMatchObject({
+      entities: [
+        { confidence: 0.95, name: "Madrid", type: "city" },
+        { confidence: 0.7, name: "Madrid", type: "place" },
+      ],
+    });
+  });
 });

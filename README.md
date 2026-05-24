@@ -108,6 +108,7 @@ pnpm build        # Create a production build
 pnpm start        # Serve the production build
 pnpm lint         # Run Biome checks
 pnpm format       # Format files with Biome
+pnpm test:coverage # Run unit tests with coverage
 ```
 
 Database commands:

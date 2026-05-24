@@ -8,6 +8,17 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      exclude: [
+        "src/**/*.test.ts",
+        "src/**/*.test.tsx",
+        "src/app/**",
+        "src/db/**",
+      ],
+      include: ["src/lib/**/*.ts"],
+      provider: "v8",
+      reporter: ["text", "html"],
+    },
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
